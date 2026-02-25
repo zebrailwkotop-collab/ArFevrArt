@@ -1,0 +1,8 @@
+{
+  "headers": [
+    {
+      "source": "/assets/model.glb",
+      "headers": [{ "key": "Content-Type", "value": "model/gltf-binary" }]
+    }
+  ]
+}

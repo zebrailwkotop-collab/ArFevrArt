@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR на страницу с анимацией</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 0.25rem; text-align: center; }
+    .sub { font-size: 0.85rem; opacity: 0.8; text-align: center; margin-bottom: 1.5rem; max-width: 320px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    input[type="url"] {
+      width: 100%;
+      max-width: 360px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    input[type="url"]::placeholder { color: rgba(255,255,255,0.4); }
+    .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #eab676;
+      color: #1a1a2e;
+      margin: 0 4px 8px 4px;
+    }
+    .btn:hover { background: #f0c686; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn.secondary { background: rgba(255,255,255,0.15); color: #eee; }
+    .btn.secondary:hover { background: rgba(255,255,255,0.25); }
+    #qr-result {
+      margin-top: 1.5rem;
+      background: #fff;
+      padding: 16px;
+      border-radius: 16px;
+      display: none;
+    }
+    #qr-result.show { display: block; }
+    #qr-result img { display: block; width: 220px; height: 220px; }
+    .btns { margin-top: 1rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .warn { font-size: 0.8rem; opacity: 0.85; margin-top: 1.5rem; max-width: 320px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>QR на страницу с анимацией</h1>
+  <p class="sub">Сгенерируйте QR, который ведёт на вашу AR-страницу (с GLB), а не на GitHub или другой файл.</p>
+
+  <label for="url">Ссылка на страницу с анимацией (ваш размещённый сайт webar):</label>
+  <input type="url" id="url" placeholder="https://ваш-проект.vercel.app/" />
+
+  <div>
+    <button type="button" class="btn" id="btn-gen">Сгенерировать QR</button>
+  </div>
+
+  <div id="qr-result">
+    <img id="qr-img" alt="QR код" />
+    <div class="btns">
+      <a id="btn-download" class="btn" href="#" download="qr-ar-animaciya.png" style="text-decoration: none; display: none;">Скачать QR (PNG)</a>
+    </div>
+  </div>
+
+  <p class="warn">Убедитесь, что в поле выше указан адрес именно вашей опубликованной страницы (Vercel, Netlify и т.д.). Тогда при сканировании откроется камера и 3D-анимация.</p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    (function() {
+      var input = document.getElementById('url');
+      var btnGen = document.getElementById('btn-gen');
+      var result = document.getElementById('qr-result');
+      var img = document.getElementById('qr-img');
+      var link = document.getElementById('btn-download');
+      var container = document.createElement('div');
+      container.id = 'qr-temp';
+      container.style.cssText = 'position:absolute;left:-9999px;';
+
+      function getDefaultUrl() {
+        var origin = window.location.origin;
+        var path = window.location.pathname.replace(/qr-generator\.html$/, '').replace(/\/?$/, '');
+        return origin + path + '/';
+      }
+
+      if (!input.value.trim()) {
+        input.value = getDefaultUrl();
+      }
+
+      function generate() {
+        var url = (input.value || '').trim();
+        if (!url) {
+          alert('Введите ссылку на страницу с анимацией.');
+          return;
+        }
+        if (!/^https?:\/\//i.test(url)) {
+          url = 'https://' + url;
+          input.value = url;
+        }
+
+        if (typeof QRCode === 'undefined') {
+          alert('Библиотека QR не загружена.');
+          return;
+        }
+
+        var old = document.getElementById('qr-temp');
+        if (old) old.remove();
+        container.id = 'qr-temp';
+        container.innerHTML = '';
+        document.body.appendChild(container);
+
+        new QRCode(container, { text: url, width: 256, height: 256 });
+
+        setTimeout(function() {
+          var qrImg = container.querySelector('img');
+          if (qrImg && qrImg.src) {
+            img.src = qrImg.src;
+            link.href = qrImg.src;
+            link.download = 'qr-ar-animaciya.png';
+            link.style.display = 'inline-block';
+            result.classList.add('show');
+          } else {
+            var table = container.querySelector('table');
+            if (table) {
+              toCanvas(table, 256, 256, function(dataUrl) {
+                img.src = dataUrl;
+                link.href = dataUrl;
+                link.download = 'qr-ar-animaciya.png';
+                link.style.display = 'inline-block';
+                result.classList.add('show');
+              });
+            }
+          }
+          container.remove();
+        }, 100);
+      }
+
+      function toCanvas(table, w, h, done) {
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        var rows = table.rows;
+        var cellW = w / rows.length;
+        var cellH = h / rows.length;
+        ctx.fillStyle = '#000';
+        for (var i = 0; i < rows.length; i++) {
+          for (var j = 0; j < rows[i].cells.length; j++) {
+            var cell = rows[i].cells[j];
+            var isBlack = cell.style.backgroundColor === 'black' || cell.getAttribute('bgcolor') === 'black' || (cell.className && cell.className.indexOf('black') >= 0);
+            if (!isBlack) {
+              var style = window.getComputedStyle ? window.getComputedStyle(cell) : cell.style;
+              var bg = style.backgroundColor || cell.getAttribute('bgcolor');
+              isBlack = bg && bg.toLowerCase() !== 'white' && bg !== '#fff' && bg !== '#ffffff' && bg !== 'rgb(255, 255, 255)';
+            }
+            if (isBlack) {
+              ctx.fillRect(j * cellW, i * cellH, cellW + 1, cellH + 1);
+            }
+          }
+        }
+        try {
+          done(canvas.toDataURL('image/png'));
+        } catch (e) {
+          done('');
+        }
+      }
+
+      btnGen.addEventListener('click', generate);
+    })();
+  </script>
+</body>
+</html>

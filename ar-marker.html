@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>AR как у Ростишки — 3D на маркере</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
+    #ui {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.4s ease;
+    }
+    #ui.hidden { pointer-events: none; opacity: 0; }
+    #ui h1 { margin: 0 0 0.5rem; font-size: 1.35rem; }
+    #ui p { margin: 0 0 1.5rem; font-size: 0.9rem; opacity: 0.9; max-width: 300px; }
+    #btn-start {
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      background: #eab676;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    #btn-start:hover { background: #f0c686; }
+    #btn-start:disabled { opacity: 0.6; cursor: not-allowed; }
+    #hint {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      max-width: 90%;
+      transition: opacity 0.3s;
+    }
+    #hint.hidden { opacity: 0; pointer-events: none; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <!-- Для анимаций GLB в A-Frame -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+</head>
+<body>
+  <div id="ui">
+    <h1>3D на маркере</h1>
+    <p>Наведите камеру на маркер (или на QR) — 3D-анимация появится прямо на нём, как у Ростишки.</p>
+    <button type="button" id="btn-start">Запустить камеру</button>
+  </div>
+  <div id="hint" class="hidden">Наведите камеру на маркер</div>
+
+  <a-scene
+    id="ar-scene"
+    mindar-image="imageTargetSrc: ./targets/targets.mind; autoStart: false;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    color-space="sRGB"
+    renderer="colorManagement: true"
+    style="position: fixed; width: 100%; height: 100%;"
+  >
+    <a-assets>
+      <a-asset-item id="ar-model" src="./assets/model.glb"></a-asset-item>
+    </a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- Когда камера видит маркер — на нём появляется эта 3D-модель -->
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model
+        src="#ar-model"
+        position="0 0 0"
+        scale="0.5 0.5 0.5"
+        rotation="0 0 0"
+        animation-mixer="clip: *; loop: repeat"
+      ></a-gltf-model>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    (function() {
+      var scene = document.getElementById('ar-scene');
+      var ui = document.getElementById('ui');
+      var btn = document.getElementById('btn-start');
+      var hint = document.getElementById('hint');
+      var arSystem = scene && scene.systems && scene.systems['mindar-image'];
+
+      function startAR() {
+        if (!arSystem) return;
+        btn.disabled = true;
+        ui.classList.add('hidden');
+        hint.classList.remove('hidden');
+        arSystem.start();
+      }
+
+      if (btn) btn.addEventListener('click', startAR);
+
+      // Автозапуск, если включён в конфиге
+      var config = window.AR_CONFIG || {};
+      if (config.autoStart) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', startAR);
+        } else {
+          startAR();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

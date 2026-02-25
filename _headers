@@ -1,0 +1,3 @@
+# Правильный MIME-type для GLB — иначе модель не подгружается в Three.js
+/assets/model.glb
+  Content-Type: model/gltf-binary
