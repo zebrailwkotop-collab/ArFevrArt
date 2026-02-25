@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR с анимацией — наведите камеру</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; text-align: center; }
+    p { font-size: 0.9rem; opacity: 0.85; text-align: center; margin: 0 0 2rem; max-width: 280px; }
+
+    .qr-wrap {
+      position: relative;
+      padding: 24px;
+    }
+    /* Кольцо пульса вокруг QR */
+    .qr-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      border: 3px solid rgba(234, 182, 118, 0.5);
+      animation: pulse-ring 2s ease-out infinite;
+    }
+    .qr-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      border: 2px solid rgba(234, 182, 118, 0.3);
+      animation: pulse-ring 2s ease-out 1s infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 1; }
+      100% { transform: scale(1.15); opacity: 0; }
+    }
+
+    #qrcode {
+      position: relative;
+      z-index: 1;
+      background: #fff;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    #qrcode img {
+      display: block;
+      width: 200px;
+      height: 200px;
+    }
+
+    .hint { margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <h1>Наведите камеру на QR</h1>
+  <p>Отсканируйте — откроется 3D-анимация в дополненной реальности</p>
+  <div class="qr-wrap">
+    <div id="qrcode"></div>
+  </div>
+  <p class="hint">Откройте эту страницу на экране во время презентации или покажите на сертификате</p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    (function() {
+      var base = window.location.origin + window.location.pathname.replace(/qr-animated\.html$/, '') || window.location.origin + '/';
+      var url = base.replace(/\/$/, '') + '/';
+      var el = document.getElementById('qrcode');
+      if (el && typeof QRCode !== 'undefined') {
+        new QRCode(el, {
+          text: url,
+          width: 200,
+          height: 200
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
