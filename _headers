@@ -1,0 +1,5 @@
+# Правильный MIME-type для GLB (модель в корне или в assets/)
+/model.glb
+  Content-Type: model/gltf-binary
+/assets/model.glb
+  Content-Type: model/gltf-binary
